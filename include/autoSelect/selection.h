@@ -4,7 +4,7 @@
 
 //selector configuration
 #define HUE 192
-#define DEFAULT 0
+#define DEFAULT 2
 #define AUTONS "AWP", "RUSH SAFE", "RUSH RISKY"
 
 namespace selector{

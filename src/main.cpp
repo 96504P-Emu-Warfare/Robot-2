@@ -82,8 +82,8 @@ lemlib::Drivetrain_t drivetrain {
 
 // forward/backward PID
 lemlib::ChassisController_t lateralController {
-    10, // kP
-    20, // kD
+    100, // kP
+    150, // kD
     1, // smallErrorRange
     100, // smallErrorTimeout
     3, // largeErrorRange
@@ -93,8 +93,8 @@ lemlib::ChassisController_t lateralController {
  
 // turning PID
 lemlib::ChassisController_t angularController {
-    3, // kP
-    27, // kD
+    4, // kP
+    35, // kD
     1, // smallErrorRange
     100, // smallErrorTimeout
     3, // largeErrorRange
@@ -173,7 +173,7 @@ void autoReady() {
 			puncherMove(0);
 			autoReadyOn = false;
 		}
-		delay(10);
+		delay(50);
 	}
 }
 
@@ -347,7 +347,7 @@ void LEDmainLoop() {
 			}
 		}
 
-		delay(40);
+		delay(50);
 	}
 }
 
@@ -387,6 +387,7 @@ void RGBcontrol() {
 				delay(50);
 				resting = false;
 			}
+
 	}
 
 	if (competitionMode && endGame) {
@@ -398,7 +399,7 @@ void RGBcontrol() {
 		Task competitionTimerTask(competitionTimerStuff);
 	}
 	
-	delay(10);
+	delay(50);
 	}
 }
 
@@ -428,43 +429,39 @@ void nearsideRushSafe() {
 	INT.move(127);
 
 	// grab central triball and back up to bar
-	chassis.moveTo(-25, -8, 10, 1300, false, true, 20);
-	chassis.turnTo(-25, -28, 800, false, true);
-	chassis.moveTo(-25, -28, chassis.getPose().theta, 1500, false, false);
-	chassis.turnTo(-51, -51, 800, false, true);
-	chassis.moveTo(-51, -51, chassis.getPose().theta, 2000, false, false);
+	chassis.moveTo(-23, -12, 10, 1300, false, true, 20);
+	chassis.turnTo(-23, -28, 800, false, true);
+	chassis.moveTo(-23, -28, chassis.getPose().theta, 1500, false, false);
+	chassis.turnTo(-57, -51, 800, false, true);
+	chassis.moveTo(-57, -51, chassis.getPose().theta, 2000, false, false, 0, 0.6, 50);
 
 	// knock out match load
-	chassis.turnTo(-44, -58, 1000);
-	Bwings.set_value(1);
-	delay(300);
-	chassis.moveTo(-44, -58, 150, 1000);
-	chassis.turnTo(-9, -58, 1000);
-	Bwings.set_value(0);
+	chassis.turnTo(-49, -55, 1000, false, true, 50);
+	chassis.moveTo(-49, -55, chassis.getPose().theta, 1000, false, false);
+	chassis.turnTo(-9, -62, 1000);
 	INT.move(-127);
-	chassis.moveTo(-11, -58, 90, 2000);
+	chassis.moveTo(-18, -60, 90, 2000);
+	chassis.moveTo(-44, -60, 90, 1500, false, false);
+	chassis.turnTo(-53, -49, 800, false, true);
+	chassis.moveTo(-53, -49, chassis.getPose().theta, 1000, false, false);
 	Bwings.set_value(1);
 }
 
-void nearsideSafe() {
-	chassis.setPose(-46,-55, 135);
-	chassis.moveTo(-56, -48, 145, 1000, false, false, 0, 0, 50);
-	CR.move(0);
+void nearsideAWP() {
 	autoFireOn = true;
-	chassis.moveTo(-53, -53, 145, 1000, false, true, 0, 0, 50);
-	FRwing.set_value(1);
-	delay(200);
-	chassis.turnTo(0, 0, 1000);
-	chassis.turnTo(-60, -40, 2000, false, true);
-	FRwing.set_value(0);
-	delay(200);
+	chassis.setPose(-48, -55, 180);
+	chassis.turnTo(-56, -28, 400, false, true);
+	chassis.moveTo(-56, -28, 180, 1000, false, false, 20, 0.3);
+	chassis.moveTo(-56, -42, 180, 1000);
+	chassis.turnTo(-47, -58, 1000);
+	Bwings.set_value(1);
+	delay(300);
+	chassis.moveTo(-46, -58, chassis.getPose().theta, 1500);
+	chassis.turnTo(-9, -61, 800);
+	Bwings.set_value(0);
+	delay(300);
+	chassis.moveTo(-14, -61, 90, 2000);
 
-	chassis.moveTo(-56, -47, 155, 2000, false, false, 0);
-	chassis.moveTo(-60, -24, 180, 2000, false, false, 20);
-	delay(200);
-	INT.move(-127);
-	chassis.moveTo(-34, -60, 90, 2000);
-	chassis.moveTo(-12, -55, 90, 3000);
 }
 
 void nearsideRushRisky() {
@@ -473,23 +470,20 @@ void nearsideRushRisky() {
 
 void sixBallMidrush() {
 	// set pose
-	chassis.setPose(32, -55, 0);
+	chassis.setPose(32, -53, 0);
 	INT.move(127);
 
-	// hit triball and grab mid 
+	// hit triball and grab 
 	FRwing.set_value(1);
-	delay(100);
-	chassis.moveTo(11, -6, 330, 600);
+	delay(200);
+	chassis.moveTo(4, -4, 330, 600);
 	FRwing.set_value(0);
-	chassis.moveTo(11, -6, 330, 2500);
-
-	// back up
-	chassis.moveTo(14, -9, chassis.getPose().theta, 800, false, false);
+	chassis.moveTo(4, -4, 330, 1000);
 
 	// push triballs
-	chassis.turnTo(59, -9, 1500);
+	chassis.turnTo(59, chassis.getPose().y, 1500);
 	FRwing.set_value(1);
-	FRwing.set_value(1);
+	FLwing.set_value(1);
 	delay(300);
 	INT.move(-127);
 	driveMove(100);
@@ -507,12 +501,23 @@ void sixBallMidrush() {
 	chassis.moveTo(10, -17, chassis.getPose().theta, 1500);
 
 	// move back and knock out triball
-	chassis.turnTo(54, -50, 800, false, true);
-	chassis.moveTo(54, -50, chassis.getPose().theta, 2000, false, false);
+	chassis.turnTo(54, -50, 800);
+	chassis.moveTo(54, -50, chassis.getPose().theta, 2000);
+	chassis.turnTo(80, -27, 800, false, true);
 	Bwings.set_value(1);
-	chassis.turnTo(60, -30, 1000, false, true);
+	delay(300);
+	chassis.turnTo(63, -43, 1000, false, true);
+	chassis.moveTo(63, -43, chassis.getPose().theta, 1500, false, false);
 	Bwings.set_value(0);
-	chassis.moveTo(60, -30, 180, 1500, false, false, 40, 0.3);
+	chassis.turnTo(65, -27, 900);
+	FLwing.set_value(1);
+	FRwing.set_value(1);
+	delay(300);
+	driveMove(100);
+	delay(600);
+	driveMove(-20);
+	delay(400);
+	driveMove(0);
 
 	// grab under elevation bar
 
@@ -561,7 +566,7 @@ void skills() {
 	chassis.turnTo(39, -14, 1500, false, true);
 	Bwings.set_value(1);
 	delay(300);
-	driveMove(-100);
+	driveMove(-90);
 	delay(1000);
 	driveMove(0);
 	chassis.setPose(40, chassis.getPose().y, chassis.getPose().theta);
@@ -574,7 +579,7 @@ void skills() {
 	chassis.turnTo(42, 0, 800, false, true);
 	Bwings.set_value(1);
 	delay(300);
-	driveMove(-100);
+	driveMove(-90);
 	delay(1500);
 	chassis.setPose(40, chassis.getPose().y, chassis.getPose().theta);
 	driveMove(50);
@@ -591,13 +596,26 @@ void skills() {
 	FLwing.set_value(1);
 	FRwing.set_value(1);
 	delay(300);
-	driveMove(100);
+	driveMove(90);
 	delay(1000);
+	chassis.setPose(30, chassis.getPose().y, chassis.getPose().theta);
 	driveMove(-20);
 	delay(500);
 	driveMove(0);
 	FLwing.set_value(0);
 	FRwing.set_value(0);
+	chassis.turnTo(10, -31, 800);
+	chassis.moveTo(10, -31, chassis.getPose().theta, 1500);
+	chassis.turnTo(0, 0, 800);
+	FLwing.set_value(1);
+	FRwing.set_value(1);
+	delay(300);
+	driveMove(100);
+	delay(700);
+	driveMove(-20);
+	delay(400);
+	driveMove(0);
+	
 
 	// elevate?
 
@@ -633,15 +651,13 @@ void initialize() {
 	lcd::initialize();
   	selector::init();
 	OPT.set_led_pwm(30);
-	autoFireOn = true;
 	//Task brainScreen(screenDisplay1)
-	//Task controllerScreenTask(controllerScreen);
+	Task controllerScreenTask(controllerScreen);
 	Task autoPuncherTask(autoPuncher);
-	Task autoReadyTask(autoReady);
 	Task ledUpdaterTask(ledUpdater);
 	Task leds(LEDmainLoop);
 	Task rgbcontrolTask(RGBcontrol);
-	Task autoHangTask(autoHang);
+	//Task autoHangTask(autoHang);
 	ROT.reset();
 }
 
@@ -682,7 +698,7 @@ void competition_initialize() {
 void autonomous() {
 	autoFireOn = true;
 
-    if(selector::auton == 1){} // awp
+    if(selector::auton == 1){nearsideAWP();} // awp
     if(selector::auton == 2){nearsideRushSafe();} // rush safe
     if(selector::auton == 3){} // rush risky
     if(selector::auton == -1){} // awp
@@ -809,7 +825,8 @@ void opcontrol() {
 		}
 
 		if (Controller1.get_digital_new_press(E_CONTROLLER_DIGITAL_UP)) {
-			autoHangOn = true;
+			chassis.setPose(0, 0, 0);
+			chassis.moveTo(chassis.getPose().x, chassis.getPose().y + 20, chassis.getPose().theta, 1500);
 		}
 
 		// toggle front left wing with "L2" button
