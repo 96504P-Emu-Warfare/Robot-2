@@ -20,27 +20,27 @@ using namespace pros;
 ******************************************/
 
 Motor FL(11, E_MOTOR_GEARSET_06, 1);
-Motor BL(12, E_MOTOR_GEARSET_06, 1);
-Motor ML(13, E_MOTOR_GEARSET_06, 1);
-Motor FR(1, E_MOTOR_GEARSET_06, 0);
-Motor BR(2, E_MOTOR_GEARSET_06, 0);
-Motor MR(3, E_MOTOR_GEARSET_06, 0);
+Motor BL(13, E_MOTOR_GEARSET_06, 1);
+Motor ML(12, E_MOTOR_GEARSET_06, 1);
+Motor FR(14, E_MOTOR_GEARSET_06, 0);
+Motor BR(17, E_MOTOR_GEARSET_06, 0);
+Motor MR(15, E_MOTOR_GEARSET_06, 0);
 
-Motor INT(15, E_MOTOR_GEARSET_06, 1);
-Motor CR(18, E_MOTOR_GEARSET_18, 1);
-Motor CL(17, E_MOTOR_GEARSET_18, 0);
-
-Optical OPT(0);
-Distance DIST(7);
-Imu INR(5);
-Rotation ROT(6);
+Motor INTL(4, E_MOTOR_GEARSET_06, 1);
+Motor INTR(5, E_MOTOR_GEARSET_18, 0);
 
 MotorGroup leftMotors({BL, ML, FL});
 MotorGroup rightMotors({BR, MR, FR});
+MotorGroup intake({INTL, INTR});
 
-ADIDigitalOut FLwing('A');
-ADIDigitalOut FRwing('B');
-ADIDigitalOut Bwings('C');
+ADIDigitalOut FRwing('A');
+ADIDigitalOut FLwing('B');
+ADIDigitalOut BRwing('C');
+ADIDigitalOut BLwing('D');
+
+Distance DIST(7);
+Imu INR(5);
+Rotation ROT(6);
 
 ADILed frontLEDs(8, 27);
 ADILed leftDriveLEDs(7, 27);
@@ -129,52 +129,6 @@ void overheatWarning(Motor motor) {
 		// print overheat statement in the form "OVERHEAT (motor, temp)"
         Controller1.set_text(2, 4, "OVERHEAT (" + std::to_string(motor.get_port()) + ", " + std::to_string(motor.get_temperature()) + ")");
     }
-}
-
-void puncherMove(int power = 127) {
-	CR.move(power);
-	CL.move(power);
-}
-
-bool triballOnKicker() {
-	return DIST.get() < 70;
-}
-
-bool puncherInReadyPosition() {
-	return ROT.get_angle() < 32000 && ROT.get_angle() > 5000;
-}
-
-// if toggled on, automatically fire detected triballs in puncher and reset
-void autoPuncher() {
-	while (true) {
-		while (autoFireOn) {
-			
-			if (triballOnKicker() || !puncherInReadyPosition()) {
-				CR.move(127);
-				CL.move(127);
-				while (triballOnKicker() || !puncherInReadyPosition()) {
-					delay(10);
-				}
-			}
-
-			CR.move(0);
-			CL.move(0);
-		}
-		delay(10);
-	}
-}
-
-// if toggled on, automatically lower/ready cata
-void autoReady() {
-	while (true) {
-		if (autoReadyOn && !autoFireOn) {
-			puncherMove(100);
-			while (!puncherInReadyPosition()) {delay(10);}
-			puncherMove(0);
-			autoReadyOn = false;
-		}
-		delay(50);
-	}
 }
 
 void screenDisplay1() {
@@ -372,10 +326,10 @@ void RGBcontrol() {
 				resting = true;
 			}
 
-			else if (std::abs(INT.get_actual_velocity()) > 100) {
+			else if (std::abs(INTR.get_actual_velocity()) > 100) {
 				resting = false;
 				flash(0x1F51FF, 1, 0xFFFFFF);
-				while (std::abs(INT.get_actual_velocity()) > 100) {
+				while (std::abs(INTR.get_actual_velocity()) > 100) {
 					delay(50);
 				}
 				flashOn = false;
@@ -421,12 +375,12 @@ void skillsStart() {
 	chassis.moveTo(-56, -28, 180, 1000, false, false, 20, 0.3);
 	chassis.moveTo(-56, -40, 180, 1500);
 	chassis.turnTo(46, 6, 700);
-	Bwings.set_value(1);
+	BLwing.set_value(1);
 }
 
 void nearsideRushSafe() {
 	chassis.setPose(-32, -55, 0);
-	INT.move(127);
+	intake.move(127);
 
 	// grab central triball and back up to bar
 	chassis.moveTo(-23, -12, 10, 1300, false, true, 20);
@@ -439,12 +393,12 @@ void nearsideRushSafe() {
 	chassis.turnTo(-49, -55, 1000, false, true, 50);
 	chassis.moveTo(-49, -55, chassis.getPose().theta, 1000, false, false);
 	chassis.turnTo(-9, -62, 1000);
-	INT.move(-127);
+	intake.move(-127);
 	chassis.moveTo(-18, -60, 90, 2000);
 	chassis.moveTo(-44, -60, 90, 1500, false, false);
 	chassis.turnTo(-53, -49, 800, false, true);
 	chassis.moveTo(-53, -49, chassis.getPose().theta, 1000, false, false);
-	Bwings.set_value(1);
+	BRwing.set_value(1);
 }
 
 void nearsideAWP() {
@@ -454,11 +408,11 @@ void nearsideAWP() {
 	chassis.moveTo(-56, -28, 180, 1000, false, false, 20, 0.3);
 	chassis.moveTo(-56, -42, 180, 1000);
 	chassis.turnTo(-47, -58, 1000);
-	Bwings.set_value(1);
+	BRwing.set_value(1);
 	delay(300);
 	chassis.moveTo(-46, -58, chassis.getPose().theta, 1500);
 	chassis.turnTo(-9, -61, 800);
-	Bwings.set_value(0);
+	BRwing.set_value(0);
 	delay(300);
 	chassis.moveTo(-14, -61, 90, 2000);
 
@@ -471,7 +425,7 @@ void nearsideRushRisky() {
 void sixBallMidrush() {
 	// set pose
 	chassis.setPose(32, -53, 0);
-	INT.move(127);
+	intake.move(127);
 
 	// hit triball and grab 
 	FRwing.set_value(1);
@@ -485,7 +439,7 @@ void sixBallMidrush() {
 	FRwing.set_value(1);
 	FLwing.set_value(1);
 	delay(300);
-	INT.move(-127);
+	intake.move(-127);
 	driveMove(100);
 	delay(600);
 	chassis.setPose(40, chassis.getPose().y, chassis.getPose().theta);
@@ -494,7 +448,7 @@ void sixBallMidrush() {
 	driveMove(-40);
 	delay(300);
 	driveMove(0);
-	INT.move(127);
+	intake.move(127);
 
 	// grab center back
 	chassis.turnTo(10, -17, 2000);
@@ -504,11 +458,11 @@ void sixBallMidrush() {
 	chassis.turnTo(54, -50, 800);
 	chassis.moveTo(54, -50, chassis.getPose().theta, 2000);
 	chassis.turnTo(80, -27, 800, false, true);
-	Bwings.set_value(1);
+	BRwing.set_value(1);
 	delay(300);
 	chassis.turnTo(63, -43, 1000, false, true);
 	chassis.moveTo(63, -43, chassis.getPose().theta, 1500, false, false);
-	Bwings.set_value(0);
+	BRwing.set_value(0);
 	chassis.turnTo(65, -27, 900);
 	FLwing.set_value(1);
 	FRwing.set_value(1);
@@ -534,7 +488,7 @@ void skills() {
 
 	// turn autofire on to stop cata from hitting bar
 	autoFireOn = false;
-	Bwings.set_value(0);
+	BRwing.set_value(0);
 
 	// turn and move backwards to other side
 	// pushing triballs along with robot
@@ -564,7 +518,7 @@ void skills() {
 	
 	// front right push
 	chassis.turnTo(39, -14, 1500, false, true);
-	Bwings.set_value(1);
+	BRwing.set_value(1);
 	delay(300);
 	driveMove(-90);
 	delay(1000);
@@ -573,11 +527,11 @@ void skills() {
 
 	// front left push
 	chassis.moveTo(10, chassis.getPose().y - 10, 270, 1500);
-	Bwings.set_value(0);
+	BRwing.set_value(0);
 	chassis.turnTo(10, 26, 1000, false, true);
 	chassis.moveTo(10, 26, 0, 2500, false, false);
 	chassis.turnTo(42, 0, 800, false, true);
-	Bwings.set_value(1);
+	BRwing.set_value(1);
 	delay(300);
 	driveMove(-90);
 	delay(1500);
@@ -587,7 +541,7 @@ void skills() {
 	driveMove(0);
 	
 	// front middle push
-	Bwings.set_value(0);
+	BRwing.set_value(0);
 	delay(300);
 	driveMove(70);
 	delay(600);
@@ -650,10 +604,8 @@ void initialize() {
 	chassis.calibrate();
 	lcd::initialize();
   	selector::init();
-	OPT.set_led_pwm(30);
 	//Task brainScreen(screenDisplay1)
 	Task controllerScreenTask(controllerScreen);
-	Task autoPuncherTask(autoPuncher);
 	Task ledUpdaterTask(ledUpdater);
 	Task leds(LEDmainLoop);
 	Task rgbcontrolTask(RGBcontrol);
@@ -764,9 +716,7 @@ void opcontrol() {
 	MR.set_brake_mode(E_MOTOR_BRAKE_COAST);
 
 	// set cata and intake motors to brake
-	CR.set_brake_mode(E_MOTOR_BRAKE_BRAKE);
-	CL.set_brake_mode(E_MOTOR_BRAKE_BRAKE);
-	INT.set_brake_mode(E_MOTOR_BRAKE_BRAKE);
+	intake.set_brake_modes(E_MOTOR_BRAKE_BRAKE);
 
 	/* BUTTON INPUT SYSTEM
 	*/
@@ -780,32 +730,19 @@ void opcontrol() {
 		// CONTROLLER 1							   // 
 		// ******************************************
 
-		// toggle cata on/off with "A" button
+		// toggle ____ with "A" button
 		if (Controller1.get_digital_new_press(E_CONTROLLER_DIGITAL_A)){
-			if (autoFireOn) {
-				autoFireOn = false;
-				cataMotorOn = false;
-			}
-			cataMotorOn = !cataMotorOn;
-			if (cataMotorOn) {
-				puncherMove(globalCataSpeed);
-			}
-			else {
-				puncherMove(0);
-			}
 
-			Bwings.set_value(autoFireOn);
 		}
 
-		// toggle autoPuncher with "B" button
+		// toggle ____ with "B" button
 		if (Controller1.get_digital_new_press(E_CONTROLLER_DIGITAL_B)) {
-			autoFireOn = !autoFireOn;
+			
 		}
 
-		// toggle autoReadyOn with "Y" button
+		// toggle ____ with "Y" button
 		if (Controller1.get_digital_new_press(E_CONTROLLER_DIGITAL_Y)) {
-			autoFireOn = false;
-			autoReadyOn = !autoReadyOn;
+			
 		}
 
 		// for testing (not for match use); run selected autonomous with "DOWN" button
@@ -815,16 +752,15 @@ void opcontrol() {
 
 		// decrease cata speed with "LEFT" button
 		if (Controller1.get_digital_new_press(E_CONTROLLER_DIGITAL_LEFT)) {
-			if (globalCataSpeed > 70) {globalCataSpeed -= 5;}
+			
 		}
 
 		// increase cata speed with "RIGHT" button
 		if (Controller1.get_digital_new_press(E_CONTROLLER_DIGITAL_RIGHT)) {
-			globalCataSpeed += 5;
-			if (globalCataSpeed < 125) {globalCataSpeed += 5;}
+			
 		}
 
-		if (Controller1.get_digital_new_press(E_CONTROLLER_DIGITAL_UP)) {
+		if (Controller1.get_digital_new_press(E_CONTROLLER_DIGITAL_UP) && !competitionMode) {
 			chassis.setPose(0, 0, 0);
 			chassis.moveTo(chassis.getPose().x, chassis.getPose().y + 20, chassis.getPose().theta, 1500);
 		}
@@ -844,18 +780,19 @@ void opcontrol() {
 		// toggle back wings with "X" button
 		if (Controller1.get_digital_new_press(E_CONTROLLER_DIGITAL_X)) {
 			BwingsOut = !BwingsOut;
-			Bwings.set_value(BwingsOut);
+			BRwing.set_value(BwingsOut);
+			BLwing.set_value(BwingsOut);
 		}
 
 		// intake if holding R1, outtake if holding R2
 		if (Controller1.get_digital(E_CONTROLLER_DIGITAL_R2)){
-			INT.move(-127);
+			intake.move(-127);
 		}
 		else if (Controller1.get_digital(E_CONTROLLER_DIGITAL_R1)){
-			INT.move(127);
+			intake.move(127);
 		} 
 		else {
-			INT.move(0);
+			intake.move(0);
 		}
 
 		// double arcade drive controls - left joystick controls forward/backward movement, right joystick controls turning
@@ -884,9 +821,8 @@ void opcontrol() {
         overheatWarning(FR);
         overheatWarning(MR);
         overheatWarning(BR);
-        overheatWarning(CR);
-		overheatWarning(CR);
-        overheatWarning(INT);
+        overheatWarning(INTR);
+		overheatWarning(INTL);
 
 		delay(10);
 	}
